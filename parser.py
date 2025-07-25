@@ -1,16 +1,16 @@
 import streamlit as st
 import pytesseract
 from pytesseract import Output
-from pdf2image import convert_from_bytes  # Using convert_from_bytes for file-like objects
+from pdf2image import convert_from_bytes
 import pandas as pd
 import re
 from io import BytesIO
 import cv2
 from matplotlib import pyplot as plt
-from PIL import Image  # Import Image from PIL
-import PyPDF2  # For PDF title extraction
+from PIL import Image
+import PyPDF2
 from calendar import month_name
-import pdfplumber  # For PDF page extraction
+import pdfplumber
 import base64
 import numpy as np
 
@@ -136,7 +136,7 @@ def find_total_energy(image):
     show_ocr_debug(image)
     # Find the position of the "Energy" column header
     energy_positions = []
-    
+
     for i, word in enumerate(data['text']):
         if re.search(r'\bEnergy\b', word, re.IGNORECASE):
             x = data['left'][i]

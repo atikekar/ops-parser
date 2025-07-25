@@ -6,4 +6,5 @@ matplotlib
 pillow
 PyPDF2
 numpy
-opencv-python
+opencv-python-headless
+
