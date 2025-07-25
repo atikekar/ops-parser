@@ -3,6 +3,6 @@ pytesseract
 pdf2image
 pandas
 matplotlib
-PIL 
-Py2PDF2
+pillow
+PyPDF2
 numpy
