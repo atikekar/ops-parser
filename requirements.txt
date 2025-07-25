@@ -8,3 +8,4 @@ PyPDF2
 numpy
 opencv-python-headless
 pdfplumber
+poppler
