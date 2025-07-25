@@ -6,5 +6,4 @@ matplotlib
 pillow
 PyPDF2
 numpy
-cv2
 opencv-python
