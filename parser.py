@@ -1,19 +1,13 @@
 import streamlit as st
-import pytesseract
-from pytesseract import Output
-from pdf2image import convert_from_bytes
 import pandas as pd
 import re
 from io import BytesIO
-import cv2
 from matplotlib import pyplot as plt
-from PIL import Image
-import PyPDF2
-from calendar import month_name
 import pdfplumber
 import base64
 import numpy as np
-import os 
+import os
+import PyPDF2
 
 # Define the Page class
 class Page:
@@ -99,7 +93,7 @@ def find_name(text, file_bytes=None):
 def extract_table(lines):
     table_data = []
     for line in lines:
-        #if line contains all numbers or contains "Total" or "Energy" or "Usage"
+        # if line contains all numbers or contains "Total" or "Energy" or "Usage"
         if re.search(r'\bTotal\b|\bEnergy\b|\bUsage\b', line, re.IGNORECASE) or all(char.isdigit() or char.isspace() for char in line):
             # Split the line into columns based on whitespace
             columns = re.split(r'\s+', line.strip())
@@ -110,39 +104,22 @@ def extract_table(lines):
     return table_data
 
 # Extract total energy from the "Energy" column in the table
-def find_total_energy(image):
-    # Get OCR data with bounding boxes
-    data = pytesseract.image_to_data(image, output_type=Output.DICT)
+def find_total_energy(extracted_table):
+    total_energy = []
+    # Loop through all rows in the extracted table
+    for row in extracted_table:
+        # Look for "Energy" in the table header and extract the column index
+        if "Energy" in row:
+            energy_index = row.index("Energy")  # Find the column of interest
+            continue
+        # Check if the row has numeric values (energy values)
+        if len(row) > energy_index and row[energy_index].replace('.', '', 1).isdigit():
+            total_energy.append(row[energy_index])  # Append energy value
 
-    # Find the position of the "Energy" column header
-    energy_positions = []
-
-    for i, word in enumerate(data['text']):
-        if re.search(r'\bEnergy\b', word, re.IGNORECASE):
-            x = data['left'][i]
-            y = data['top'][i]
-            w = data['width'][i]
-            h = data['height'][i]
-            center_x = x + w // 2
-            energy_positions.append((center_x, y))  # x-center and y-top of "Energy"
-
-    if not energy_positions:
-        return []  # Return empty list if no "Energy" header found
-    
-# Extract text from image using OCR (pytesseract)
-def text_from_image(images):
-    extracted_text = []
-    for image in images:
-        if isinstance(image, Image.Image):
-            text = pytesseract.image_to_string(image)
-            extracted_text.append(text)
-        else:
-            raise TypeError("Unsupported image object")
-    
-    return extracted_text
+    return total_energy  # Return the list of energy values
 
 # Function to generate page data and CSV
-def find_page_data(extracted_text, images, file_bytes=None):
+def find_page_data(extracted_text, extracted_data, file_bytes=None):
     page_data = []
 
     st.write(f"Total pages in PDF: {len(extracted_text)}")
@@ -154,10 +131,10 @@ def find_page_data(extracted_text, images, file_bytes=None):
         print(year_in)
         name_in = find_name(page, file_bytes=file_bytes)  # Pass the file_bytes to find_name
         print(name_in)
-        total_in = find_total_energy(images[i])
+        total_in = find_total_energy(extracted_data)
         print(total_in)
         page_data.append(Page(i + 1, month_in, year_in, name_in, total_in))
-    
+
     return page_data
 
 # Function to save data to CSV
@@ -188,14 +165,19 @@ def execute():
         file_bytes = input_file.read()
 
         progress_bar = st.progress(0, "Converting PDF to images...")
-        images = convert_from_bytes(file_bytes, dpi=200, poppler_path="/opt/homebrew/bin")
-        progress_bar.progress(25, "PDF converted to images successfully.")
+        with pdfplumber.open(BytesIO(file_bytes)) as pdf:
+            if not pdf.pages:
+                st.error("The PDF file is empty or has no pages.")
+                return
+            progress_bar.progress(10, "PDF opened successfully.")
+            for page in pdf.pages:
+                extracted_text = page.extract_text()
+                extracted_table = page.extract_table()
 
         progress_bar.progress(50, "Extracting text from images...")
-        extracted_text = text_from_image(images)
         
         progress_bar.progress(75, "Converting to CSV file.")
-        page_data = find_page_data(extracted_text, images, file_bytes=file_bytes)
+        page_data = find_page_data(extracted_text, extracted_table, file_bytes=file_bytes)
 
         input_file_name = input_file.name if input_file.name else "extracted_data.pdf"
         csv_name = input_file_name.replace('.pdf', '_data.csv') if file_bytes else "extracted_data.csv"
@@ -203,7 +185,6 @@ def execute():
         output_csv_path = "/tmp/extracted_data.csv"
         save_to_csv(page_data, output_csv_path)
         
-
         progress_bar.progress(100, "CSV file created successfully.")
         st.download_button(
             label="Download CSV File",
