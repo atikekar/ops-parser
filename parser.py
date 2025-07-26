@@ -13,6 +13,7 @@ from calendar import month_name
 import pdfplumber
 import base64
 import numpy as np
+import os 
 
 # Define the Page class
 class Page:
@@ -176,6 +177,8 @@ def save_to_csv(page_data, output_csv_path):
 
 # Main function to execute the Streamlit app
 def execute():
+    os.environ["PATH"] += ":/opt/homebrew/opt/poppler/bin"
+    st.set_page_config(page_title="PDF Processing Application", layout="wide")
     #input_file = st.file_uploader("Upload a PDF file", type=["pdf"], key="pdf_uploader")
     input_path = './sample1.pdf'
     input_file = open(input_path, "rb")
