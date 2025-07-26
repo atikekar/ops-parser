@@ -156,9 +156,9 @@ def save_to_csv(page_data, output_csv_path):
 def execute():
     os.environ["PATH"] += ":/opt/homebrew/bin"
     st.set_page_config(page_title="PDF Processing Application", layout="wide")
-    #input_file = st.file_uploader("Upload a PDF file", type=["pdf"], key="pdf_uploader")
-    input_path = './sample1.pdf'
-    input_file = open(input_path, "rb")
+    input_file = st.file_uploader("Upload a PDF file", type=["pdf"], key="pdf_uploader")
+    #input_path = './sample1.pdf'
+    #input_file = open(input_path, "rb")
 
     if input_file is not None:
         st.write("Processing PDF...")
