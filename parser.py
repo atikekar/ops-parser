@@ -94,29 +94,7 @@ def find_name(text, file_bytes=None):
     else:
         return matches[0]
 
-def show_ocr_debug(image):
-    # Get OCR data
-    data = pytesseract.image_to_data(image, output_type=Output.DICT)
-
-    # Convert PIL image (if needed) to OpenCV
-    if hasattr(image, 'convert'):  # if it's a PIL image
-        image = cv2.cvtColor(np.array(image.convert('RGB')), cv2.COLOR_RGB2BGR)
-
-    for i, word in enumerate(data['text']):
-        if word.strip() == "":
-            continue
-        x, y, w, h = data['left'][i], data['top'][i], data['width'][i], data['height'][i]
-        # Draw rectangle and word
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
-        cv2.putText(image, word, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-
-    # Show image
-    plt.figure(figsize=(12, 12))
-    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    plt.axis('off')
-    plt.title("OCR Debug Output")
-    plt.show()
-
+# Extract table data from lines
 def extract_table(lines):
     table_data = []
     for line in lines:
@@ -130,10 +108,11 @@ def extract_table(lines):
                 table_data.append(columns)
     return table_data
 
+# Extract total energy from the "Energy" column in the table
 def find_total_energy(image):
     # Get OCR data with bounding boxes
     data = pytesseract.image_to_data(image, output_type=Output.DICT)
-    show_ocr_debug(image)
+
     # Find the position of the "Energy" column header
     energy_positions = []
 
@@ -148,7 +127,6 @@ def find_total_energy(image):
 
     if not energy_positions:
         return []  # Return empty list if no "Energy" header found
-    
     
 # Extract text from image using OCR (pytesseract)
 def text_from_image(images):
@@ -207,7 +185,7 @@ def execute():
         file_bytes = input_file.read()
 
         progress_bar = st.progress(0, "Converting PDF to images...")
-        images = convert_from_bytes(file_bytes, dpi=200)
+        images = convert_from_bytes(file_bytes, dpi=200, poppler_path="/opt/homebrew/opt/poppler/bin")
 
         progress_bar.progress(50, "Extracting text from images...")
         extracted_text = text_from_image(images)
