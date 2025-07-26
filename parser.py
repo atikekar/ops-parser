@@ -177,7 +177,7 @@ def save_to_csv(page_data, output_csv_path):
 
 # Main function to execute the Streamlit app
 def execute():
-    os.environ["PATH"] += ":/opt/homebrew/opt/poppler/bin"
+    os.environ["PATH"] += ":/opt/homebrew/bin"
     st.set_page_config(page_title="PDF Processing Application", layout="wide")
     #input_file = st.file_uploader("Upload a PDF file", type=["pdf"], key="pdf_uploader")
     input_path = './sample1.pdf'
@@ -188,7 +188,8 @@ def execute():
         file_bytes = input_file.read()
 
         progress_bar = st.progress(0, "Converting PDF to images...")
-        images = convert_from_bytes(file_bytes, dpi=200, poppler_path="/opt/homebrew/opt/poppler/bin")
+        images = convert_from_bytes(file_bytes, dpi=200, poppler_path="/opt/homebrew/bin")
+        progress_bar.progress(25, "PDF converted to images successfully.")
 
         progress_bar.progress(50, "Extracting text from images...")
         extracted_text = text_from_image(images)
